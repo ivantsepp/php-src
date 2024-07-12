@@ -10295,6 +10295,12 @@ ZEND_VM_HELPER(zend_interrupt_helper, ANY, ANY)
 	zend_atomic_bool_store_ex(&EG(vm_interrupt), false);
 	SAVE_OPLINE();
 	if (zend_atomic_bool_load_ex(&EG(timed_out))) {
+		if (zend_string_equals_literal(execute_data->func->common.function_name, "__get")) {
+			zend_object *zobj = Z_OBJ(execute_data->This);
+			zval *guard_value = zobj->properties_table + zobj->ce->default_properties_count;
+			ZVAL_UNDEF(guard_value);
+			Z_GUARD_P(guard_value) = 0;
+		}
 		zend_timeout();
 	} else if (zend_interrupt_function) {
 		zend_interrupt_function(execute_data);
